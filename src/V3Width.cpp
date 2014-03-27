@@ -366,6 +366,29 @@ private:
 	    }
 	}
     }
+    virtual void visit(AstStream* nodep, AstNUser* vup) {
+	if (vup->c()->prelim()) {
+	    nodep->lhsp()->iterateAndNext(*this,WidthVP(ANYSIZE,0,BOTH).p());
+	    nodep->rhsp()->iterateAndNext(*this,WidthVP(ANYSIZE,0,BOTH).p());
+	    checkCvtUS(nodep->lhsp());
+	    checkCvtUS(nodep->rhsp());
+	    V3Const::constifyParamsEdit(nodep->rhsp()); // rhsp may change
+	    AstConst* constp = nodep->rhsp()->castConst();
+	    AstBasicDType* bdtypep = nodep->rhsp()->castBasicDType();
+	    if (!constp && !bdtypep) { nodep->v3error("Slice size isn't a constant or basic data type."); return; }
+	    uint32_t sliceSize = constp ? constp->toUInt() : bdtypep->width();
+	    if (!sliceSize) { nodep->v3error("Slice size cannot be zero."); return; }
+	    nodep->dtypeSetLogicSized((nodep->lhsp()->width()),
+				      (nodep->lhsp()->widthMin()),
+				      AstNumeric::UNSIGNED);
+	}
+	if (vup->c()->final()) {
+	    if (!nodep->dtypep()->widthSized()) {
+		// See also error in V3Number
+		nodep->v3warn(WIDTHCONCAT,"Unsized numbers/parameters not allowed in streams.");
+	    }
+	}
+    }
     virtual void visit(AstRange* nodep, AstNUser* vup) {
 	// Real: Not allowed
 	// Signed: unsigned output, input either

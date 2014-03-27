@@ -3120,9 +3120,9 @@ streaming_concatenation<nodep>:	// ==IEEE: streaming_concatenation
 	//			// IEEE: "'{' yP_SL/R             stream_concatenation '}'"
 	//			// IEEE: "'{' yP_SL/R simple_type stream_concatenation '}'"
 	//			// IEEE: "'{' yP_SL/R constExpr	  stream_concatenation '}'"
-		'{' yP_SLEFT              stream_concOrExprOrType '}'	{ $$ = $3; }
+		'{' yP_SLEFT              stream_concOrExprOrType '}'	{ $$ = new AstStreamL($1, $3, new AstConst($1,1)); }
 	|	'{' yP_SRIGHT             stream_concOrExprOrType '}'	{ $$ = $3; }
-	|	'{' yP_SLEFT  stream_concOrExprOrType stream_concatenation '}'	{ $$ = $4; }
+	|	'{' yP_SLEFT  stream_concOrExprOrType stream_concatenation '}'	{ $$ = new AstStreamL($1, $4, $3); }
 	|	'{' yP_SRIGHT stream_concOrExprOrType stream_concatenation '}'	{ $$ = $4; }
 	;
 
