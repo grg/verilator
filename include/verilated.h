@@ -1358,6 +1358,53 @@ static inline WDataOutP VL_REPLICATE_WWI(int obits, int lbits, int, WDataOutP ow
     return(owp);
 }
 
+// Left stream operator. Output will always be clean. LHS and RHS must be clean.
+static inline IData VL_STREAML_III(int, int lbits, int, IData ld, IData rd) {
+    IData returndata = 0;
+
+    // Slice size should never exceed the lhs width
+    int ssize=rd < lbits ? rd : lbits;
+    IData mask = (2 << (rd - 1)) - 1;
+    for (int istart=0; istart<lbits; istart+=rd) {
+	int ostart=lbits-rd-istart;
+        ostart = ostart > 0 ? ostart : 0;
+        returndata |= ((ld >> istart) & mask) << ostart;
+    }
+    return returndata;
+}
+
+static inline QData VL_STREAML_QQI(int, int lbits, int, QData ld, IData rd) {
+    QData returndata = 0;
+
+    // Slice size should never exceed the lhs width
+    int ssize=rd < lbits ? rd : lbits;
+    QData mask = (2 << (rd - 1)) - 1;
+    for (int istart=0; istart<lbits; istart+=rd) {
+	int ostart=lbits-rd-istart;
+        ostart = ostart > 0 ? ostart : 0;
+        returndata |= ((ld >> istart) & mask) << ostart;
+    }
+    return returndata;
+}
+
+static inline WDataOutP VL_STREAML_WWI(int, int lbits, int, WDataOutP owp, WDataInP lwp, IData rd) {
+    VL_ZERO_RESET_W(lbits, owp);
+
+    // Slice size should never exceed the lhs width
+    int ssize=rd < lbits ? rd : lbits;
+    for (int istart=0; istart<lbits; istart+=rd) {
+	int ostart=lbits-rd-istart;
+        ostart = ostart > 0 ? ostart : 0;
+	for (int sbit=0; sbit<ssize && sbit<lbits-istart; sbit++) {
+            // Extract a single bit from lwp and shift it to the correct
+            // location for owp.
+            WData bit= ((lwp[VL_BITWORD_I(istart+sbit)] >> VL_BITBIT_I(istart+sbit)) & 1) << VL_BITBIT_I(ostart+sbit);
+            owp[VL_BITWORD_I(ostart+sbit)] |= bit;
+	}
+    }
+    return owp;
+}
+
 // Because concats are common and wide, it's valuable to always have a clean output.
 // Thus we specify inputs must be clean, so we don't need to clean the output.
 // Note the bit shifts are always constants, so the adds in these constify out.
