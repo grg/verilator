@@ -4194,7 +4194,7 @@ struct AstStreamL : public AstStream {
     virtual void numberOperate(V3Number& out, const V3Number& lhs, const V3Number& rhs) { out.opStreamL(lhs,rhs); }
     virtual string emitC() { return "VL_STREAML_%nq%lq%rq(%nw,%lw,%rw, %P, %li, %ri)"; }
     virtual bool cleanOut() {return true;}
-    virtual bool cleanLhs() {return false;} virtual bool cleanRhs() {return false;}
+    virtual bool cleanLhs() {return true;} virtual bool cleanRhs() {return true;}
     virtual bool sizeMattersLhs() {return true;} virtual bool sizeMattersRhs() {return false;}
     virtual int instrCount()	const { return widthInstrs()*2; }
 };
