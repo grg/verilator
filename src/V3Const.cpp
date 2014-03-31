@@ -988,13 +988,10 @@ private:
 	    if (sWidth > dWidth) {
 		srcp = new AstSel(streamp->fileline(), srcp,  sWidth-dWidth-1, dWidth);
 	    }
-	    AstNodeAssign* newp=nodep->cloneType(dstp, srcp)->castNodeAssign();
-	    newp->dtypeFrom(srcp);
+	    nodep->lhsp(dstp);
+	    nodep->rhsp(srcp);
 
-	    if (debug()>=9 && newp) newp->dumpTreeAndNext(cout,"     _new: ");
-	    nodep->addNextHere(newp);
 	    // Cleanup
-	    nodep->unlinkFrBack()->deleteTree(); nodep=NULL;
 	    sizep->deleteTree(); sizep=NULL;
 	    streamp->deleteTree(); streamp=NULL;
 	    // Further reduce, any of the nodes may have more reductions.
