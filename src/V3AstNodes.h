@@ -4198,6 +4198,18 @@ struct AstStreamL : public AstStream {
     virtual bool sizeMattersLhs() {return true;} virtual bool sizeMattersRhs() {return false;}
     virtual int instrCount()	const { return widthInstrs()*2; }
 };
+struct AstStreamR : public AstStream {
+    // Verilog {rhs{lhs}} - Note rhsp() is the slice size, not the lhsp()
+    AstStreamR(FileLine* fl, AstNode* lhsp, AstNode* rhsp) : AstStream(fl, lhsp, rhsp) {}
+    ASTNODE_NODE_FUNCS(StreamR, STREAMR)
+    virtual string emitVerilog() { return "%f{ >> %l %k%r}"; }
+    virtual void numberOperate(V3Number& out, const V3Number& lhs, const V3Number& rhs) { out.opAssign(lhs); }
+    virtual string emitC() { return "%li"; }
+    virtual bool cleanOut() {return false;}
+    virtual bool cleanLhs() {return false;} virtual bool cleanRhs() {return false;}
+    virtual bool sizeMattersLhs() {return true;} virtual bool sizeMattersRhs() {return false;}
+    virtual int instrCount()	const { return widthInstrs()*2; }
+};
 struct AstBufIf1 : public AstNodeBiop {
     // lhs is enable, rhs is data to drive
     // Note unlike the Verilog bufif1() UDP, this allows any width; each lhsp bit enables respective rhsp bit

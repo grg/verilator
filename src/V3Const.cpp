@@ -975,6 +975,31 @@ private:
 	    // Further reduce, any of the nodes may have more reductions.
 	    return true;
 	}
+	else if (m_doV && nodep->lhsp()->castStreamR()) {
+	    int dWidth = nodep->lhsp()->castStreamR()->lhsp()->width();
+	    int sWidth = nodep->rhsp()->width();
+
+	    // Unlink the stuff
+	    AstNode*   dstp    = nodep->lhsp()->castStreamR()->lhsp()->unlinkFrBack();
+	    AstNode*   sizep   = nodep->lhsp()->castStreamR()->rhsp()->unlinkFrBack();
+	    AstNode*   streamp = nodep->lhsp()->castStreamR()->unlinkFrBack();
+	    AstNode*   srcp    = nodep->rhsp()->unlinkFrBack();
+
+	    if (sWidth > dWidth) {
+		srcp = new AstSel(streamp->fileline(), srcp,  sWidth-dWidth-1, dWidth);
+	    }
+	    AstNodeAssign* newp=nodep->cloneType(dstp, srcp)->castNodeAssign();
+	    newp->dtypeFrom(srcp);
+
+	    if (debug()>=9 && newp) newp->dumpTreeAndNext(cout,"     _new: ");
+	    nodep->addNextHere(newp);
+	    // Cleanup
+	    nodep->unlinkFrBack()->deleteTree(); nodep=NULL;
+	    sizep->deleteTree(); sizep=NULL;
+	    streamp->deleteTree(); streamp=NULL;
+	    // Further reduce, any of the nodes may have more reductions.
+	    return true;
+	}
 	else if (replaceAssignMultiSel(nodep)) {
 	    return true;
 	}
