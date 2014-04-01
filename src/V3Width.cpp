@@ -366,7 +366,7 @@ private:
 	    }
 	}
     }
-    virtual void visit(AstStream* nodep, AstNUser* vup) {
+    virtual void visit(AstNodeStream* nodep, AstNUser* vup) {
 	if (vup->c()->prelim()) {
 	    nodep->lhsp()->iterateAndNext(*this,WidthVP(ANYSIZE,0,BOTH).p());
 	    nodep->rhsp()->iterateAndNext(*this,WidthVP(ANYSIZE,0,BOTH).p());

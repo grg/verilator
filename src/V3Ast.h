@@ -1676,6 +1676,18 @@ struct AstNodeSel : public AstNodeBiop {
     virtual bool hasDType() const { return true; }
 };
 
+struct AstNodeStream : public AstNodeBiop {
+    // Verilog {rhs{lhs}} - Note rhsp() is the slice size, not the lhsp()
+    AstNodeStream(FileLine* fl, AstNode* lhsp, AstNode* rhsp) : AstNodeBiop(fl, lhsp, rhsp) {
+	if (lhsp->dtypep() && rhsp->dtypep()) {
+	    dtypeSetLogicSized(lhsp->dtypep()->width()+rhsp->dtypep()->width(),
+			       lhsp->dtypep()->width()+rhsp->dtypep()->width(),
+			       AstNumeric::UNSIGNED);
+	}
+    }
+    ASTNODE_BASE_FUNCS(NodeStream)
+};
+
 //######################################################################
 // Tasks/functions common handling
 
