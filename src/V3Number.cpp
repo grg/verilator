@@ -894,8 +894,8 @@ V3Number& V3Number::opRepl (const V3Number& lhs, uint32_t rhsval) {	// rhs is # 
 V3Number& V3Number::opStreamL (const V3Number& lhs, const V3Number& rhs) {
     setZero();
     // See also error in V3Width
-    if (!lhs.sized() || !rhs.sized()) {
-	m_fileline->v3warn(WIDTHCONCAT,"Unsized numbers/parameters not allowed in concatenations.");
+    if (!lhs.sized()) {
+	m_fileline->v3warn(WIDTHCONCAT,"Unsized numbers/parameters not allowed in streams.");
     }
     // Slice size should never exceed the lhs width
     int ssize=min(rhs.toUInt(), (unsigned)lhs.width());
