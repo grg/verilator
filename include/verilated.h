@@ -1364,7 +1364,7 @@ static inline IData VL_STREAML_III(int, int lbits, int, IData ld, IData rd) {
 
     // Slice size should never exceed the lhs width
     int ssize=rd < lbits ? rd : lbits;
-    IData mask = (2 << (rd - 1)) - 1;
+    IData mask = VL_MASK_I(rd);
     for (int istart=0; istart<lbits; istart+=rd) {
 	int ostart=lbits-rd-istart;
         ostart = ostart > 0 ? ostart : 0;
@@ -1378,7 +1378,7 @@ static inline QData VL_STREAML_QQI(int, int lbits, int, QData ld, IData rd) {
 
     // Slice size should never exceed the lhs width
     int ssize=rd < lbits ? rd : lbits;
-    QData mask = (2 << (rd - 1)) - 1;
+    QData mask = VL_MASK_Q(rd);
     for (int istart=0; istart<lbits; istart+=rd) {
 	int ostart=lbits-rd-istart;
         ostart = ostart > 0 ? ostart : 0;
