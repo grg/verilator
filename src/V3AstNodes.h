@@ -4179,7 +4179,7 @@ struct AstStreamL : public AstNodeStream {
     // Verilog {rhs{lhs}} - Note rhsp() is the slice size, not the lhsp()
     AstStreamL(FileLine* fl, AstNode* lhsp, AstNode* rhsp) : AstNodeStream(fl, lhsp, rhsp) {}
     ASTNODE_NODE_FUNCS(StreamL, STREAML)
-    virtual string emitVerilog() { return "%f{ << %l %k%r}"; }
+    virtual string emitVerilog() { return "%f{ << %r %k{%l} }"; }
     virtual void numberOperate(V3Number& out, const V3Number& lhs, const V3Number& rhs) { out.opStreamL(lhs,rhs); }
     virtual string emitC() { return "VL_STREAML_%nq%lq%rq(%nw,%lw,%rw, %P, %li, %ri)"; }
     virtual bool cleanOut() {return true;}
@@ -4191,7 +4191,7 @@ struct AstStreamR : public AstNodeStream {
     // Verilog {rhs{lhs}} - Note rhsp() is the slice size, not the lhsp()
     AstStreamR(FileLine* fl, AstNode* lhsp, AstNode* rhsp) : AstNodeStream(fl, lhsp, rhsp) {}
     ASTNODE_NODE_FUNCS(StreamR, STREAMR)
-    virtual string emitVerilog() { return "%f{ >> %l %k%r}"; }
+    virtual string emitVerilog() { return "%f{ >> %r %k{%l} }"; }
     virtual void numberOperate(V3Number& out, const V3Number& lhs, const V3Number& rhs) { out.opAssign(lhs); }
     virtual string emitC() { return "%li"; }
     virtual bool cleanOut() {return false;}
