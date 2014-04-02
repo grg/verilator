@@ -956,37 +956,25 @@ private:
 	    return true;
 	}
 	else if (m_doV && nodep->lhsp()->castStreamL()) {
+            // Push the stream operator to the rhs of the assignment statement
 	    int dWidth = nodep->lhsp()->castStreamL()->lhsp()->width();
-	    uint32_t sliceSize = nodep->lhsp()->castStreamL()->rhsp()->castConst()->toUInt();
+	    int sWidth = nodep->rhsp()->width();
 
 	    // Unlink the stuff
 	    AstNode*   dstp    = nodep->lhsp()->castStreamL()->lhsp()->unlinkFrBack();
-	    AstNode*   sizep   = nodep->lhsp()->castStreamL()->rhsp()->unlinkFrBack();
 	    AstNode*   streamp = nodep->lhsp()->castStreamL()->unlinkFrBack();
 	    AstNode*   srcp    = nodep->rhsp()->unlinkFrBack();
 
-	    AstNode* newp = NULL;
-	    for (int i=0; i<dWidth; i+=sliceSize) {
-		int adjSliceSize = min((int)sliceSize, dWidth - i);
-
-		AstNode* dst2p = dstp->cloneTree(false);
-		AstNode* src2p = srcp->cloneTree(false);
-		AstSel*  sellp = new AstSel(streamp->fileline(), dst2p,  dWidth-adjSliceSize-i, adjSliceSize);
-		AstSel*  selrp = new AstSel(streamp->fileline(), src2p,  i, adjSliceSize);
-		AstNodeAssign* assignp=nodep->cloneType(sellp, selrp)->castNodeAssign();
-		assignp->dtypeFrom(selrp);
-		newp = newp->addNext(assignp);
+            // Shrink the RHS if necessary
+	    if (sWidth > dWidth) {
+		srcp = new AstSel(streamp->fileline(), srcp,  0, dWidth);
 	    }
 
-	    if (debug()>=9 && newp) newp->dumpTreeAndNext(cout,"     _new: ");
-	    nodep->addNextHere(newp);
-	    // Cleanup
-	    nodep->unlinkFrBack()->deleteTree(); nodep=NULL;
-	    dstp->deleteTree(); dstp=NULL;
-	    sizep->deleteTree(); sizep=NULL;
-	    streamp->deleteTree(); streamp=NULL;
-	    srcp->deleteTree(); srcp=NULL;
-	    // Further reduce, any of the nodes may have more reductions.
+            // Link the nodes back in
+	    nodep->lhsp(dstp);
+            streamp->castStreamL()->lhsp(srcp);
+	    nodep->rhsp(streamp);
+
 	    return true;
 	}
 	else if (m_doV && nodep->lhsp()->castStreamR()) {
