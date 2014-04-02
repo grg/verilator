@@ -997,6 +997,20 @@ private:
 	    // Further reduce, any of the nodes may have more reductions.
 	    return true;
 	}
+	else if (m_doV && nodep->rhsp()->castStreamR()) {
+	    // Unlink the stuff
+	    AstNode*   srcp    = nodep->rhsp()->castStreamR()->lhsp()->unlinkFrBack();
+	    AstNode*   sizep   = nodep->rhsp()->castStreamR()->rhsp()->unlinkFrBack();
+	    AstNode*   streamp = nodep->rhsp()->castStreamR()->unlinkFrBack();
+
+	    nodep->rhsp(srcp);
+
+	    // Cleanup
+	    sizep->deleteTree(); sizep=NULL;
+	    streamp->deleteTree(); streamp=NULL;
+	    // Further reduce, any of the nodes may have more reductions.
+	    return true;
+	}
 	else if (replaceAssignMultiSel(nodep)) {
 	    return true;
 	}
