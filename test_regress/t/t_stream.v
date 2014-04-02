@@ -63,9 +63,9 @@ module t (/*AUTOARG*/
    // operator in generated C code. (Only left stream on the RHS of an
    // assignment operator propagates through to the C code. Everything else is
    // evaluated away.)
-   logic [31:0]	  din_i, dout_rhs_ls_i;
-   logic [63:0]	  din_q, dout_rhs_ls_q;
-   logic [95:0]	  din_w, dout_rhs_ls_w;
+   logic [31:0]	  din_i, dout_rhs_ls_i, dout_rhs_rs_i;
+   logic [63:0]	  din_q, dout_rhs_ls_q, dout_rhs_rs_q;
+   logic [95:0]	  din_w, dout_rhs_ls_w, dout_rhs_rs_w;
 
    logic [3:0]	  din_lhs;
    logic [1:0]	  dout_lhs_ls_a, dout_lhs_ls_b;
@@ -83,8 +83,9 @@ module t (/*AUTOARG*/
 
       // Stream operator: >>
       // Location: rhs of assignment
-      //
-      // No test as this get optimized away
+      dout_rhs_rs_i = { >> {din_i}};
+      dout_rhs_rs_q = { >> {din_q}};
+      dout_rhs_rs_w = { >> {din_w}};
 
       // Stream operator: <<
       // Location: lhs of assignment
@@ -119,6 +120,10 @@ module t (/*AUTOARG*/
 	    if (dout_rhs_ls_q != 64'h_80_00_00_00_00_00_00_00) $stop;
 	    if (dout_rhs_ls_w != 96'h_80_00_00_00_00_00_00_00_00_00_00_00) $stop;
 
+            if (dout_rhs_rs_i != 32'h_00_00_00_01) $stop;
+            if (dout_rhs_rs_q != 64'h_00_00_00_00_00_00_00_01) $stop;
+            if (dout_rhs_rs_w != 96'h_00_00_00_00_00_00_00_00_00_00_00_01) $stop;
+
 	    if (dout_lhs_ls_a != 2'b_01) $stop;
 	    if (dout_lhs_ls_b != 2'b_00) $stop;
 
@@ -129,6 +134,10 @@ module t (/*AUTOARG*/
 	    if (dout_rhs_ls_i != 32'h_80_40_c0_20) $stop;
 	    if (dout_rhs_ls_q != 64'h_80_40_c0_20_a0_60_e0_10) $stop;
 	    if (dout_rhs_ls_w != 96'h_80_40_c0_20_a0_60_e0_10_90_50_d0_30) $stop;
+
+            if (dout_rhs_rs_i != 32'h_04_03_02_01) $stop;
+            if (dout_rhs_rs_q != 64'h_08_07_06_05_04_03_02_01) $stop;
+            if (dout_rhs_rs_w != 96'h_0c_0b_0a_09_08_07_06_05_04_03_02_01) $stop;
 
 	    if (dout_lhs_ls_a != 2'b_11) $stop;
 	    if (dout_lhs_ls_b != 2'b_01) $stop;
