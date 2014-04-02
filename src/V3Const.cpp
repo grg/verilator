@@ -942,6 +942,9 @@ private:
 	    return true;
 	}
 	else if (m_doV && nodep->rhsp()->castStreamR()) {
+	    // The right-streaming operator on rhs of assignment does not
+	    // change the order of bits. Eliminate stream but keep its lhsp
+
 	    // Unlink the stuff
 	    AstNode*   srcp    = nodep->rhsp()->castStreamR()->lhsp()->unlinkFrBack();
 	    AstNode*   sizep   = nodep->rhsp()->castStreamR()->rhsp()->unlinkFrBack();
@@ -983,6 +986,9 @@ private:
 	    return true;
 	}
 	else if (m_doV && nodep->lhsp()->castStreamR()) {
+	    // The right stream operator on lhs of assignment statement does
+	    // not reorder bits. However, if the rhs is wider than the lhs,
+	    // then we select bits from the left-most, not the right-most.
 	    int dWidth = nodep->lhsp()->castStreamR()->lhsp()->width();
 	    int sWidth = nodep->rhsp()->width();
 
