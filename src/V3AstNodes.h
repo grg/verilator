@@ -4193,7 +4193,7 @@ struct AstStreamR : public AstNodeStream {
     ASTNODE_NODE_FUNCS(StreamR, STREAMR)
     virtual string emitVerilog() { return "%f{ >> %r %k{%l} }"; }
     virtual void numberOperate(V3Number& out, const V3Number& lhs, const V3Number& rhs) { out.opAssign(lhs); }
-    virtual string emitC() { return "%li"; }
+    virtual string emitC() { return isWide() ? "VL_ASSIGN_W(%nw, %P, %li)" : "%li"; }
     virtual bool cleanOut() {return false;}
     virtual bool cleanLhs() {return false;} virtual bool cleanRhs() {return false;}
     virtual bool sizeMattersLhs() {return true;} virtual bool sizeMattersRhs() {return false;}
