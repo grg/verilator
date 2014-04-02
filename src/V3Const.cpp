@@ -965,14 +965,19 @@ private:
 	    AstNode*   streamp = nodep->lhsp()->castStreamL()->unlinkFrBack();
 	    AstNode*   srcp    = nodep->rhsp()->unlinkFrBack();
 
+	    // Connect the rhs to the stream operator and update its width
+	    streamp->castStreamL()->lhsp(srcp);
+	    streamp->dtypeSetLogicSized((srcp->width()),
+					(srcp->widthMin()),
+					AstNumeric::UNSIGNED);
+
             // Shrink the RHS if necessary
 	    if (sWidth > dWidth) {
-		srcp = new AstSel(streamp->fileline(), srcp,  0, dWidth);
+		streamp = new AstSel(streamp->fileline(), streamp, sWidth-dWidth, dWidth);
 	    }
 
             // Link the nodes back in
 	    nodep->lhsp(dstp);
-            streamp->castStreamL()->lhsp(srcp);
 	    nodep->rhsp(streamp);
 
 	    return true;
