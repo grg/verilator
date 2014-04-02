@@ -56,6 +56,35 @@ module t (/*AUTOARG*/
       { >> 4 {dout}} = 4'b0001; if (dout != 4'b0001) $stop;
       { >> 5 {dout}} = 4'b0001; if (dout != 4'b0001) $stop;
 
+      // Stream operator: <<
+      // Location: lhs of assignment
+      // RHS is *wider* than LHS
+      /* verilator lint_off WIDTH */
+      { << {dout}} = 5'b00001; if (dout != 4'b1000) $stop;
+      { << 2 {dout}} = 5'b00001; if (dout != 4'b0100) $stop;
+      { << 3 {dout}} = 5'b00001; if (dout != 4'b0010) $stop;
+      { << 4 {dout}} = 5'b00001; if (dout != 4'b0001) $stop;
+      { << 5 {dout}} = 5'b01101; if (dout != 4'b0110) $stop;
+      /* verilator lint_on WIDTH */
+
+      // Stream operator: >>
+      // Location: lhs of assignment
+      // RHS is *wider* than LHS
+      /* verilator lint_off WIDTH */
+      { >> {dout}} = 5'b01101; if (dout != 4'b0110) $stop;
+      { >> 2 {dout}} = 5'b01101; if (dout != 4'b0110) $stop;
+      { >> 3 {dout}} = 5'b01101; if (dout != 4'b0110) $stop;
+      { >> 4 {dout}} = 5'b01101; if (dout != 4'b0110) $stop;
+      { >> 5 {dout}} = 5'b01101; if (dout != 4'b0110) $stop;
+      /* verilator lint_on WIDTH */
+
+      // Stream operator: <<
+      // Location: both sides of assignment
+      { << {dout}} = { << {4'b00001}}; if (dout != 4'b0001) $stop;
+      { << 2 {dout}} = { << 2 {4'b00001}}; if (dout != 4'b0001) $stop;
+      { << 3 {dout}} = { << 3 {4'b00001}}; if (dout != 4'b0100) $stop;
+      { << 4 {dout}} = { << 4 {4'b00001}}; if (dout != 4'b0001) $stop;
+      { << 5 {dout}} = { << 5 {4'b00001}}; if (dout != 4'b0001) $stop;
    end
 
 
@@ -63,13 +92,29 @@ module t (/*AUTOARG*/
    // operator in generated C code. (Only left stream on the RHS of an
    // assignment operator propagates through to the C code. Everything else is
    // evaluated away.)
-   logic [31:0]	  din_i, dout_rhs_ls_i, dout_rhs_rs_i;
-   logic [63:0]	  din_q, dout_rhs_ls_q, dout_rhs_rs_q;
-   logic [95:0]	  din_w, dout_rhs_ls_w, dout_rhs_rs_w;
+   logic [31:0]   din_i;
+   logic [63:0]   din_q;
+   logic [95:0]   din_w;
 
-   logic [3:0]	  din_lhs;
-   logic [1:0]	  dout_lhs_ls_a, dout_lhs_ls_b;
-   logic [1:0]	  dout_lhs_rs_a, dout_lhs_rs_b;
+   logic [31:0]   dout_rhs_ls_i;
+   logic [63:0]   dout_rhs_ls_q;
+   logic [95:0]   dout_rhs_ls_w;
+
+   logic [31:0]   dout_rhs_rs_i;
+   logic [63:0]   dout_rhs_rs_q;
+   logic [95:0]   dout_rhs_rs_w;
+
+   logic [31:0]   dout_bhs_ls_i;
+   logic [63:0]   dout_bhs_ls_q;
+   logic [95:0]   dout_bhs_ls_w;
+
+   logic [31:0]   dout_bhs_rs_i;
+   logic [63:0]   dout_bhs_rs_q;
+   logic [95:0]   dout_bhs_rs_w;
+
+   logic [3:0]    din_lhs;
+   logic [1:0]    dout_lhs_ls_a, dout_lhs_ls_b;
+   logic [1:0]    dout_lhs_rs_a, dout_lhs_rs_b;
 
    always @*
    begin
@@ -94,6 +139,24 @@ module t (/*AUTOARG*/
       // Stream operator: >>
       // Location: lhs of assignment
       { >> 2 {dout_lhs_rs_a, dout_lhs_rs_b}} = din_lhs;
+
+      // Stream operator: <<
+      // Location: both sides of assignment
+      { << 5 {dout_bhs_ls_i}} = { << 5 {din_i}};
+      { << 5 {dout_bhs_ls_q}} = { << 5 {din_q}};
+      { << 5 {dout_bhs_ls_w}} = { << 5 {din_w}};
+
+      // Stream operator: >>
+      // Location: both sides of assignment
+      { >> 5 {dout_bhs_rs_i}} = { >> 5 {din_i}};
+      { >> 5 {dout_bhs_rs_q}} = { >> 5 {din_q}};
+      { >> 5 {dout_bhs_rs_w}} = { >> 5 {din_w}};
+
+      // Stream operator: <<
+      // Location: both sides of assignment
+      { << 5 {dout_bhs_ls_i}} = { << 5 {din_i}};
+      { << 5 {dout_bhs_ls_q}} = { << 5 {din_q}};
+      { << 5 {dout_bhs_ls_w}} = { << 5 {din_w}};
    end
 
    always @(posedge clk)
@@ -129,6 +192,14 @@ module t (/*AUTOARG*/
 
 	    if (dout_lhs_rs_a != 2'b_00) $stop;
 	    if (dout_lhs_rs_b != 2'b_01) $stop;
+
+	    if (dout_bhs_rs_i != 32'h_00_00_00_01) $stop;
+	    if (dout_bhs_rs_q != 64'h_00_00_00_00_00_00_00_01) $stop;
+	    if (dout_bhs_rs_w != 96'h_00_00_00_00_00_00_00_00_00_00_00_01) $stop;
+
+	    if (dout_bhs_ls_i != 32'h_00_00_00_10) $stop;
+	    if (dout_bhs_ls_q != 64'h_00_00_00_00_00_00_01_00) $stop;
+	    if (dout_bhs_ls_w != 96'h_00_00_00_00_00_00_00_00_00_00_00_04) $stop;
          end
          if (cyc == 3) begin
 	    if (dout_rhs_ls_i != 32'h_80_40_c0_20) $stop;
@@ -138,6 +209,14 @@ module t (/*AUTOARG*/
             if (dout_rhs_rs_i != 32'h_04_03_02_01) $stop;
             if (dout_rhs_rs_q != 64'h_08_07_06_05_04_03_02_01) $stop;
             if (dout_rhs_rs_w != 96'h_0c_0b_0a_09_08_07_06_05_04_03_02_01) $stop;
+
+	    if (dout_bhs_ls_i != 32'h_40_30_00_18) $stop;
+	    if (dout_bhs_ls_q != 64'h_06_00_c1_81_41_00_c1_80) $stop;
+	    if (dout_bhs_ls_w != 96'h_30_2c_28_20_01_1c_1a_04_14_0c_00_06) $stop;
+
+	    if (dout_bhs_rs_i != 32'h_04_03_02_01) $stop;
+	    if (dout_bhs_rs_q != 64'h_08_07_06_05_04_03_02_01) $stop;
+	    if (dout_bhs_rs_w != 96'h_0c_0b_0a_09_08_07_06_05_04_03_02_01) $stop;
 
 	    if (dout_lhs_ls_a != 2'b_11) $stop;
 	    if (dout_lhs_ls_b != 2'b_01) $stop;
