@@ -1000,7 +1000,7 @@ private:
 	    AstNode*   srcp    = nodep->rhsp()->unlinkFrBack();
 
 	    if (sWidth > dWidth) {
-		srcp = new AstSel(streamp->fileline(), srcp,  sWidth-dWidth-1, dWidth);
+		srcp = new AstSel(streamp->fileline(), srcp,  sWidth-dWidth, dWidth);
 	    }
 	    nodep->lhsp(dstp);
 	    nodep->rhsp(srcp);
