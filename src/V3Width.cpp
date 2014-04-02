@@ -2496,7 +2496,13 @@ private:
 			  <<" bits.");
 	}
 	if (bad || underp->width()!=expWidth) {
-	    fixWidthExtend(underp, expDTypep, extendRule); underp=NULL;//Changed
+	    // If we're in an NodeAssign, don't truncate the RHS if the LHS is
+	    // a NodeStream. The streaming operator changes the rules regarding
+	    // which bits to truncate.
+	    AstNodeAssign* assignp = nodep->castNodeAssign();
+            if (!assignp || !assignp->lhsp()->castNodeStream()) {
+	        fixWidthExtend(underp, expDTypep, extendRule); underp=NULL;//Changed
+	    }
 	}
     }
 
