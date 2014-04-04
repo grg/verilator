@@ -1359,6 +1359,59 @@ static inline WDataOutP VL_REPLICATE_WWI(int obits, int lbits, int, WDataOutP ow
 }
 
 // Left stream operator. Output will always be clean. LHS and RHS must be clean.
+
+// Special "fast" versions for slice sizes that are a power of 2. These use
+// shifts and masks to execute faster than the slower for-loop approach where a
+// subset of bits is copied in during each iteration.
+//
+// WARNING: Must NOT be called for non powers of 2
+static inline IData VL_STREAML_FAST_III(int, int lbits, int, IData ld, IData rd) {
+    IData ret = ld;
+
+    switch (rd) {
+	case 1:
+	    ret = ((ret >> 1) & 0x55555555) | ((ret & 0x55555555) << 1);    // FALLTHRU
+	case 2:
+	    ret = ((ret >> 2) & 0x33333333) | ((ret & 0x33333333) << 2);    // FALLTHRU
+	case 4:
+	    ret = ((ret >> 4) & 0x0f0f0f0f) | ((ret & 0x0f0f0f0f) << 4);    // FALLTHRU
+	case 8:
+	    ret = ((ret >> 8) & 0x00ff00ff) | ((ret & 0x00ff00ff) << 8);    // FALLTHRU
+	case 16:
+	    ret = ((ret >> 16) | (ret << 16));
+    }
+
+    IData finalMask = 1 << (lbits % rd) - 1;
+    uint32_t remShift = ((sizeof(IData) * 8) - lbits) & ~finalMask;
+
+    return (ret >> ((sizeof(IData) * 8) - lbits)) | ((ret >> remShift) & finalMask);
+}
+
+static inline QData VL_STREAML_FAST_QQI(int, int lbits, int, QData ld, IData rd) {
+    QData ret = ld;
+
+    switch (rd) {
+	case 1:
+	    ret = ((ret >>  1) & 0x5555555555555555) | ((ret & 0x5555555555555555) <<  1);    // FALLTHRU
+	case 2:
+	    ret = ((ret >>  2) & 0x3333333333333333) | ((ret & 0x3333333333333333) <<  2);    // FALLTHRU
+	case 4:
+	    ret = ((ret >>  4) & 0x0f0f0f0f0f0f0f0f) | ((ret & 0x0f0f0f0f0f0f0f0f) <<  4);    // FALLTHRU
+	case 8:
+	    ret = ((ret >>  8) & 0x00ff00ff00ff00ff) | ((ret & 0x00ff00ff00ff00ff) <<  8);    // FALLTHRU
+	case 16:
+	    ret = ((ret >> 16) & 0x0000ffff0000ffff) | ((ret & 0x0000ffff0000ffff) << 16);    // FALLTHRU
+	case 32:
+	    ret = ((ret >> 32) | (ret << 32));
+    }
+
+    IData finalMask = 1 << (lbits % rd) - 1;
+    uint32_t remShift = ((sizeof(QData) * 8) - lbits) & ~finalMask;
+
+    return (ret >> ((sizeof(QData) * 8) - lbits)) | ((ret >> remShift) & finalMask);
+}
+
+// Regular "slow" streaming operators
 static inline IData VL_STREAML_III(int, int lbits, int, IData ld, IData rd) {
     IData returndata = 0;
 
