@@ -89,32 +89,59 @@ module t (/*AUTOARG*/
 
 
    // The two always blocks below test run-time evaluation of the stream
-   // operator in generated C code. (Only left stream on the RHS of an
-   // assignment operator propagates through to the C code. Everything else is
-   // evaluated away.)
+   // operator in generated C code.
+   //
+   // Various stream operators are optimized away. Here's a brief summary:
+   //
+   //  Stream op on RHS of assign
+   //  --------------------------
+   //    X = { << a { Y } }  --- C function evaluates stream operator
+   //                             -- if log2(a) == int  --> "fast" eval func
+   //                             -- if log2(a) != int  --> "slow" eval func
+   //    X = { >> a { Y } }  --- stream operator is optimized away
+   //
+   //  Stream op on LHS of assign
+   //  --------------------------
+   //  Note: if Y.width() > X.width, then the MSBs of Y are used, not the LSBs!
+   //    { << a { X } } = Y  --- stream operator is moved to RHS, eval as above
+   //    { >> a { X } } = Y  --- stream operator is optimized away
+
    logic [31:0]   din_i;
    logic [63:0]   din_q;
    logic [95:0]   din_w;
 
+   // Stream op on RHS, left-stream operator
    logic [31:0]   dout_rhs_ls_i;
    logic [63:0]   dout_rhs_ls_q;
    logic [95:0]   dout_rhs_ls_w;
 
+   // Stream op on RHS, right-stream operator
    logic [31:0]   dout_rhs_rs_i;
    logic [63:0]   dout_rhs_rs_q;
    logic [95:0]   dout_rhs_rs_w;
 
+   // Stream op on both sides, left-stream operator
    logic [31:0]   dout_bhs_ls_i;
    logic [63:0]   dout_bhs_ls_q;
    logic [95:0]   dout_bhs_ls_w;
 
+   // Stream op on both sides, right-stream operator
    logic [31:0]   dout_bhs_rs_i;
    logic [63:0]   dout_bhs_rs_q;
    logic [95:0]   dout_bhs_rs_w;
 
+   // Stream operator on LHS (with concatenation on LHS)
    logic [3:0]    din_lhs;
    logic [1:0]    dout_lhs_ls_a, dout_lhs_ls_b;
    logic [1:0]    dout_lhs_rs_a, dout_lhs_rs_b;
+
+   // Addition operator on LHS, right-shift tests:
+   // Testing various shift sizes to exercise fast + slow funcs
+   logic [22:0]   dout_rhs_ls_i_23_3;
+   logic [22:0]   dout_rhs_ls_i_23_4;
+
+   logic [36:0]   dout_rhs_ls_q_37_3;
+   logic [36:0]   dout_rhs_ls_q_37_4;
 
    always @*
    begin
@@ -157,6 +184,16 @@ module t (/*AUTOARG*/
       { << 5 {dout_bhs_ls_i}} = { << 5 {din_i}};
       { << 5 {dout_bhs_ls_q}} = { << 5 {din_q}};
       { << 5 {dout_bhs_ls_w}} = { << 5 {din_w}};
+
+      // Stream operator: <<
+      // Location: rhs of assignment
+      //
+      // Verify both fast and slow paths (fast: sliceSize = power of 2)
+      dout_rhs_ls_i_23_3 = { << 3 {din_i[22:0]}}; // SLOW
+      dout_rhs_ls_i_23_4 = { << 4 {din_i[22:0]}}; // FAST
+
+      dout_rhs_ls_q_37_3 = { << 3 {din_q[36:0]}}; // SLOW
+      dout_rhs_ls_q_37_4 = { << 4 {din_q[36:0]}}; // FAST
    end
 
    always @(posedge clk)
@@ -177,7 +214,6 @@ module t (/*AUTOARG*/
             din_w <= 96'h_0c_0b_0a_09_08_07_06_05_04_03_02_01;
 
             din_lhs <= 4'b_01_11;
-
 
 	    if (dout_rhs_ls_i != 32'h_80_00_00_00) $stop;
 	    if (dout_rhs_ls_q != 64'h_80_00_00_00_00_00_00_00) $stop;
@@ -200,6 +236,12 @@ module t (/*AUTOARG*/
 	    if (dout_bhs_ls_i != 32'h_00_00_00_10) $stop;
 	    if (dout_bhs_ls_q != 64'h_00_00_00_00_00_00_01_00) $stop;
 	    if (dout_bhs_ls_w != 96'h_00_00_00_00_00_00_00_00_00_00_00_04) $stop;
+
+	    if (dout_rhs_ls_i_23_3 != 23'h_10_00_00) $stop;
+	    if (dout_rhs_ls_i_23_4 != 23'h_08_00_00) $stop;
+
+	    if (dout_rhs_ls_q_37_3 != 37'h_04_00_00_00_00) $stop;
+	    if (dout_rhs_ls_q_37_4 != 37'h_02_00_00_00_00) $stop;
          end
          if (cyc == 3) begin
 	    if (dout_rhs_ls_i != 32'h_80_40_c0_20) $stop;
@@ -223,6 +265,12 @@ module t (/*AUTOARG*/
 
 	    if (dout_lhs_rs_a != 2'b_01) $stop;
 	    if (dout_lhs_rs_b != 2'b_11) $stop;
+
+	    if (dout_rhs_ls_i_23_3 != 23'h_10_08_c0) $stop;
+	    if (dout_rhs_ls_i_23_4 != 23'h_08_10_18) $stop;
+
+	    if (dout_rhs_ls_q_37_3 != 37'h_04_02_30_10_44) $stop;
+	    if (dout_rhs_ls_q_37_4 != 37'h_02_04_06_08_0a) $stop;
          end
          if (cyc == 9) begin
             $write("*-* All Finished *-*\n");
