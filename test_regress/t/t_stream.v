@@ -85,6 +85,16 @@ module t (/*AUTOARG*/
       { << 3 {dout}} = { << 3 {4'b00001}}; if (dout != 4'b0100) $stop;
       { << 4 {dout}} = { << 4 {4'b00001}}; if (dout != 4'b0001) $stop;
       { << 5 {dout}} = { << 5 {4'b00001}}; if (dout != 4'b0001) $stop;
+
+      // Stream operator: <<
+      // Location: as an operand within a statement
+      //
+      // Test slice sizes from 1 - 5
+      if (4'({ << {4'b0001}}) != 4'b1000) $stop;
+      if (4'({ << 2 {4'b0001}}) != 4'b0100) $stop;
+      if (4'({ << 3 {4'b0001}}) != 4'b0010) $stop;
+      if (4'({ << 4 {4'b0001}}) != 4'b0001) $stop;
+      if (4'({ << 5 {4'b0001}}) != 4'b0001) $stop;
    end
 
 
