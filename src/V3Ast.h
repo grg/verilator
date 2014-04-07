@@ -1679,9 +1679,9 @@ struct AstNodeSel : public AstNodeBiop {
 struct AstNodeStream : public AstNodeBiop {
     // Verilog {rhs{lhs}} - Note rhsp() is the slice size, not the lhsp()
     AstNodeStream(FileLine* fl, AstNode* lhsp, AstNode* rhsp) : AstNodeBiop(fl, lhsp, rhsp) {
-	if (lhsp->dtypep() && rhsp->dtypep()) {
-	    dtypeSetLogicSized(lhsp->dtypep()->width()+rhsp->dtypep()->width(),
-			       lhsp->dtypep()->width()+rhsp->dtypep()->width(),
+	if (lhsp->dtypep()) {
+	    dtypeSetLogicSized(lhsp->dtypep()->width(),
+			       lhsp->dtypep()->width(),
 			       AstNumeric::UNSIGNED);
 	}
     }
