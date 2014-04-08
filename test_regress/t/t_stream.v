@@ -254,6 +254,12 @@ module t (/*AUTOARG*/
 	    if (dout_rhs_ls_q_37_4 != 37'h_02_00_00_00_00) $stop;
          end
          if (cyc == 3) begin
+	    // The values below test the strange shift-merge done at the end of
+	    // the fast stream operators.
+	    // All-1s in the bits being streamed should end up as all-1s.
+	    din_i <= 32'h_00_7f_ff_ff;
+	    din_q <= 64'h_00_00_00_1f_ff_ff_ff_ff;
+
 	    if (dout_rhs_ls_i != 32'h_80_40_c0_20) $stop;
 	    if (dout_rhs_ls_q != 64'h_80_40_c0_20_a0_60_e0_10) $stop;
 	    if (dout_rhs_ls_w != 96'h_80_40_c0_20_a0_60_e0_10_90_50_d0_30) $stop;
@@ -282,6 +288,13 @@ module t (/*AUTOARG*/
 	    if (dout_rhs_ls_q_37_3 != 37'h_04_02_30_10_44) $stop;
 	    if (dout_rhs_ls_q_37_4 != 37'h_02_04_06_08_0a) $stop;
          end
+	 if (cyc == 4) begin
+	    if (dout_rhs_ls_i_23_3 != 23'h_7f_ff_ff) $stop;
+	    if (dout_rhs_ls_i_23_4 != 23'h_7f_ff_ff) $stop;
+
+	    if (dout_rhs_ls_q_37_3 != 37'h_1f_ff_ff_ff_ff) $stop;
+	    if (dout_rhs_ls_q_37_4 != 37'h_1f_ff_ff_ff_ff) $stop;
+	 end
          if (cyc == 9) begin
             $write("*-* All Finished *-*\n");
             $finish;
