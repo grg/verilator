@@ -1382,9 +1382,9 @@ static inline IData VL_STREAML_FAST_III(int, int lbits, int, IData ld, IData rd_
     }
 
     IData finalMask = rd_log2 ? (VL_UL(1) << (lbits & VL_MASK_I(rd_log2))) - 1 : 0;
-    uint32_t remShift = ((sizeof(IData) * 8) - lbits) & ~VL_MASK_I(rd_log2);
+    uint32_t remShift = (VL_WORDSIZE - lbits) & ~VL_MASK_I(rd_log2);
 
-    return ((ret >> (sizeof(IData) * 8 - lbits)) & ~finalMask) | ((ret >> remShift) & finalMask);
+    return ((ret >> (VL_WORDSIZE - lbits)) & ~finalMask) | ((ret >> remShift) & finalMask);
 }
 
 static inline QData VL_STREAML_FAST_QQI(int, int lbits, int, QData ld, IData rd_log2) {
@@ -1406,9 +1406,9 @@ static inline QData VL_STREAML_FAST_QQI(int, int lbits, int, QData ld, IData rd_
     }
 
     QData finalMask = rd_log2 ? (VL_ULL(1) << (lbits & VL_MASK_Q(rd_log2))) - 1 : 0;
-    uint32_t remShift = ((sizeof(QData) * 8) - lbits) & ~VL_MASK_Q(rd_log2);
+    uint32_t remShift = (VL_QUADSIZE - lbits) & ~VL_MASK_Q(rd_log2);
 
-    return ((ret >> (sizeof(QData) * 8 - lbits)) & ~finalMask) | ((ret >> remShift) & finalMask);
+    return ((ret >> (VL_QUADSIZE * 8 - lbits)) & ~finalMask) | ((ret >> remShift) & finalMask);
 }
 
 // Regular "slow" streaming operators
