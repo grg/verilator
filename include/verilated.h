@@ -1381,7 +1381,7 @@ static inline IData VL_STREAML_FAST_III(int, int lbits, int, IData ld, IData rd)
 	    ret = ((ret >> 16) | (ret << 16));
     }
 
-    IData finalMask = (1 << (lbits % rd)) - 1;
+    IData finalMask = (VL_UL(1) << (lbits % rd)) - 1;
     uint32_t remShift = ((sizeof(IData) * 8) - lbits) & ~(rd - 1);
 
     return ((ret >> (sizeof(IData) * 8 - lbits)) & ~finalMask) | ((ret >> remShift) & finalMask);
@@ -1405,7 +1405,7 @@ static inline QData VL_STREAML_FAST_QQI(int, int lbits, int, QData ld, IData rd)
 	    ret = ((ret >> 32) | (ret << 32));
     }
 
-    QData finalMask = (1 << (lbits % rd)) - 1;
+    QData finalMask = (VL_ULL(1) << (lbits % rd)) - 1;
     uint32_t remShift = ((sizeof(QData) * 8) - lbits) & ~(rd - 1);
 
     return ((ret >> (sizeof(QData) * 8 - lbits)) & ~finalMask) | ((ret >> remShift) & finalMask);
