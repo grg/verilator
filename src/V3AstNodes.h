@@ -4181,17 +4181,7 @@ struct AstStreamL : public AstNodeStream {
     ASTNODE_NODE_FUNCS(StreamL, STREAML)
     virtual string emitVerilog() { return "%f{ << %r %k{%l} }"; }
     virtual void numberOperate(V3Number& out, const V3Number& lhs, const V3Number& rhs) { out.opStreamL(lhs,rhs); }
-    virtual string emitC() {
-	// Attempt to use a "fast" stream function for slice size = power of 2
-	if (!isWide()) {
-	    uint32_t isPow2 = rhsp()->castConst()->num().countOnes() == 1;
-	    uint32_t sliceSize = rhsp()->castConst()->toUInt();
-	    if (isPow2 && sliceSize <= (isQuad() ? sizeof(uint64_t) : sizeof(uint32_t))) {
-		return "VL_STREAML_FAST_%nq%lq%rq(%nw,%lw,%rw, %P, %li, %ri)";
-	    }
-	}
-	return "VL_STREAML_%nq%lq%rq(%nw,%lw,%rw, %P, %li, %ri)";
-    }
+    virtual string emitC() { return "VL_STREAML_%nq%lq%rq(%nw,%lw,%rw, %P, %li, %ri)"; }
     virtual bool cleanOut() {return true;}
     virtual bool cleanLhs() {return true;} virtual bool cleanRhs() {return true;}
     virtual bool sizeMattersLhs() {return true;} virtual bool sizeMattersRhs() {return false;}

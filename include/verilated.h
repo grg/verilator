@@ -1365,48 +1365,48 @@ static inline WDataOutP VL_REPLICATE_WWI(int obits, int lbits, int, WDataOutP ow
 // subset of bits is copied in during each iteration.
 //
 // WARNING: Must NOT be called for non powers of 2
-static inline IData VL_STREAML_FAST_III(int, int lbits, int, IData ld, IData rd) {
+static inline IData VL_STREAML_FAST_III(int, int lbits, int, IData ld, IData rd_log2) {
     IData ret = ld;
 
-    switch (rd) {
-	case 1:
+    switch (rd_log2) {
+	case 0:
 	    ret = ((ret >> 1) & 0x55555555) | ((ret & 0x55555555) << 1);    // FALLTHRU
-	case 2:
+	case 1:
 	    ret = ((ret >> 2) & 0x33333333) | ((ret & 0x33333333) << 2);    // FALLTHRU
-	case 4:
+	case 2:
 	    ret = ((ret >> 4) & 0x0f0f0f0f) | ((ret & 0x0f0f0f0f) << 4);    // FALLTHRU
-	case 8:
+	case 3:
 	    ret = ((ret >> 8) & 0x00ff00ff) | ((ret & 0x00ff00ff) << 8);    // FALLTHRU
-	case 16:
+	case 4:
 	    ret = ((ret >> 16) | (ret << 16));
     }
 
-    IData finalMask = (VL_UL(1) << (lbits % rd)) - 1;
-    uint32_t remShift = ((sizeof(IData) * 8) - lbits) & ~(rd - 1);
+    IData finalMask = rd_log2 ? (VL_UL(1) << (lbits & VL_MASK_I(rd_log2))) - 1 : 0;
+    uint32_t remShift = ((sizeof(IData) * 8) - lbits) & ~VL_MASK_I(rd_log2);
 
     return ((ret >> (sizeof(IData) * 8 - lbits)) & ~finalMask) | ((ret >> remShift) & finalMask);
 }
 
-static inline QData VL_STREAML_FAST_QQI(int, int lbits, int, QData ld, IData rd) {
+static inline QData VL_STREAML_FAST_QQI(int, int lbits, int, QData ld, IData rd_log2) {
     QData ret = ld;
 
-    switch (rd) {
-	case 1:
+    switch (rd_log2) {
+	case 0:
 	    ret = ((ret >>  1) & 0x5555555555555555) | ((ret & 0x5555555555555555) <<  1);    // FALLTHRU
-	case 2:
+	case 1:
 	    ret = ((ret >>  2) & 0x3333333333333333) | ((ret & 0x3333333333333333) <<  2);    // FALLTHRU
-	case 4:
+	case 2:
 	    ret = ((ret >>  4) & 0x0f0f0f0f0f0f0f0f) | ((ret & 0x0f0f0f0f0f0f0f0f) <<  4);    // FALLTHRU
-	case 8:
+	case 3:
 	    ret = ((ret >>  8) & 0x00ff00ff00ff00ff) | ((ret & 0x00ff00ff00ff00ff) <<  8);    // FALLTHRU
-	case 16:
+	case 4:
 	    ret = ((ret >> 16) & 0x0000ffff0000ffff) | ((ret & 0x0000ffff0000ffff) << 16);    // FALLTHRU
-	case 32:
+	case 5:
 	    ret = ((ret >> 32) | (ret << 32));
     }
 
-    QData finalMask = (VL_ULL(1) << (lbits % rd)) - 1;
-    uint32_t remShift = ((sizeof(QData) * 8) - lbits) & ~(rd - 1);
+    QData finalMask = rd_log2 ? (VL_ULL(1) << (lbits & VL_MASK_Q(rd_log2))) - 1 : 0;
+    uint32_t remShift = ((sizeof(QData) * 8) - lbits) & ~VL_MASK_Q(rd_log2);
 
     return ((ret >> (sizeof(QData) * 8 - lbits)) & ~finalMask) | ((ret >> remShift) & finalMask);
 }
