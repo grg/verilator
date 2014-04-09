@@ -1381,6 +1381,25 @@ static inline IData VL_STREAML_FAST_III(int, int lbits, int, IData ld, IData rd_
 	    ret = ((ret >> 16) | (ret << 16));
     }
 
+    // Need to shift and merge the result before returning it so that the
+    // output bits are in the LSBs. Imagine we're working with an 8-bit C data
+    // type (not 32-bit), and we have a 5-bit Verilog value. The 5 bits would
+    // appear in the 8-bit variable as follows:
+    //   ---43210
+    // (where numbers represent data bits and '-' represents non-data bits).
+    //
+    // Calling this function with a slice size of two (rd = 2 or rd_log2 = 1)
+    // produces:
+    //   ret = 0132-4--
+    //
+    // This needs two sets of adjustments:
+    //   a) ret needs to be shifted back into the LSBs. The shift amount is:
+    //         C_variable_size - lbits
+    //      This produces:
+    //         ---1232-
+    //   b) If lbits % rd != 0 then the bits in the "partial slice" need to be
+    //      shifted into the correct spot in the LSBs. remShift/finalMask take
+    //      care of shifting these bits to the correct place.
     IData finalMask = rd_log2 ? (VL_UL(1) << (lbits & VL_MASK_I(rd_log2))) - 1 : 0;
     uint32_t remShift = (VL_WORDSIZE - lbits) & ~VL_MASK_I(rd_log2);
 
