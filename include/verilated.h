@@ -1368,6 +1368,32 @@ static inline WDataOutP VL_REPLICATE_WWI(int obits, int lbits, int, WDataOutP ow
 static inline IData VL_STREAML_FAST_III(int, int lbits, int, IData ld, IData rd_log2) {
     IData ret = ld;
 
+    // Pre-shift bits in most-significant slice
+    // ----------------------------------------
+    // If lbits is not a multiple of the slice size (i.e., lbits % rd != 0),
+    // then we end up with a "gap" in our reversed result. For example, if we
+    // have a 5-bit Verlilog signal (lbits=5) in an 8-bit C data type:
+    //
+    //   ld = ---43210
+    //
+    // (where numbers are the Verilog signal bit numbers and '-' is an unused bit).
+    // Executing the switch statement below with a slice size of two (rd=2,
+    // rd_log2=1) produces:
+    //
+    //   ret = 1032-400
+    //
+    // Pre-shifting the bits in the most-significant slice allows us to avoid
+    // this gap in the shuffled data:
+    //
+    //   ld_adjusted = --4-3210
+    //   ret = 10324---
+    if (rd_log2) {
+	uint32_t lbitsFloor = lbits & ~VL_MASK_I(rd_log2); // max multiple of rd <= lbits
+	uint32_t lbitsRem = lbits - lbitsFloor; // number of bits in most-sig slice (MSS)
+	IData msbMask = VL_MASK_I(lbitsRem) << lbitsFloor; // mask to sel only bits in MSS
+	ret = (ret & ~msbMask) | ((ret & msbMask) << ((VL_UL(1) << rd_log2) - lbitsRem));
+    }
+
     switch (rd_log2) {
 	case 0:
 	    ret = ((ret >> 1) & 0x55555555) | ((ret & 0x55555555) << 1);    // FALLTHRU
@@ -1381,33 +1407,19 @@ static inline IData VL_STREAML_FAST_III(int, int lbits, int, IData ld, IData rd_
 	    ret = ((ret >> 16) | (ret << 16));
     }
 
-    // Need to shift and merge the result before returning it so that the
-    // output bits are in the LSBs. Imagine we're working with an 8-bit C data
-    // type (not 32-bit), and we have a 5-bit Verilog value. The 5 bits would
-    // appear in the 8-bit variable as follows:
-    //   ---43210
-    // (where numbers represent data bits and '-' represents non-data bits).
-    //
-    // Calling this function with a slice size of two (rd = 2 or rd_log2 = 1)
-    // produces:
-    //   ret = 0132-4--
-    //
-    // This needs two sets of adjustments:
-    //   a) ret needs to be shifted back into the LSBs. The shift amount is:
-    //         C_variable_size - lbits
-    //      This produces:
-    //         ---1232-
-    //   b) If lbits % rd != 0 then the bits in the "partial slice" need to be
-    //      shifted into the correct spot in the LSBs. remShift/finalMask take
-    //      care of shifting these bits to the correct place.
-    IData finalMask = rd_log2 ? (VL_UL(1) << (lbits & VL_MASK_I(rd_log2))) - 1 : 0;
-    uint32_t remShift = (VL_WORDSIZE - lbits) & ~VL_MASK_I(rd_log2);
-
-    return ((ret >> (VL_WORDSIZE - lbits)) & ~finalMask) | ((ret >> remShift) & finalMask);
+    return ret >> (VL_WORDSIZE - lbits);
 }
 
 static inline QData VL_STREAML_FAST_QQI(int, int lbits, int, QData ld, IData rd_log2) {
     QData ret = ld;
+
+    // Pre-shift bits in most-significant slice (see comment in VL_STREAML_FAST_III)
+    if (rd_log2) {
+        uint32_t lbitsFloor = lbits & ~VL_MASK_I(rd_log2);
+        uint32_t lbitsRem = lbits - lbitsFloor;
+        QData msbMask = VL_MASK_Q(lbitsRem) << lbitsFloor;
+        ret = (ret & ~msbMask) | ((ret & msbMask) << ((VL_ULL(1) << rd_log2) - lbitsRem));
+    }
 
     switch (rd_log2) {
 	case 0:
@@ -1424,10 +1436,7 @@ static inline QData VL_STREAML_FAST_QQI(int, int lbits, int, QData ld, IData rd_
 	    ret = ((ret >> 32) | (ret << 32));
     }
 
-    QData finalMask = rd_log2 ? (VL_ULL(1) << (lbits & VL_MASK_Q(rd_log2))) - 1 : 0;
-    uint32_t remShift = (VL_QUADSIZE - lbits) & ~VL_MASK_Q(rd_log2);
-
-    return ((ret >> (VL_QUADSIZE * 8 - lbits)) & ~finalMask) | ((ret >> remShift) & finalMask);
+    return ret >> (VL_QUADSIZE - lbits);
 }
 
 // Regular "slow" streaming operators
