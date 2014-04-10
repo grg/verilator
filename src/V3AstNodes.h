@@ -4165,7 +4165,9 @@ struct AstReplicate : public AstNodeBiop {
 	}
     }
     AstReplicate(FileLine* fl, AstNode* lhsp, uint32_t repCount)
-	: AstNodeBiop(fl, lhsp, new AstConst(fl, repCount)) {}
+	: AstNodeBiop(fl, lhsp, new AstConst(fl, repCount)) {
+	dtypeSetLogicSized(lhsp->width()*repCount, lhsp->width()*repCount, AstNumeric::UNSIGNED);
+    }
     ASTNODE_NODE_FUNCS(Replicate, REPLICATE)
     virtual void numberOperate(V3Number& out, const V3Number& lhs, const V3Number& rhs) { out.opRepl(lhs,rhs); }
     virtual string emitVerilog() { return "%f{%r{%k%l}}"; }
